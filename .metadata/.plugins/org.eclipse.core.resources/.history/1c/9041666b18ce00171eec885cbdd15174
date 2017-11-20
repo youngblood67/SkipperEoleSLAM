@@ -1,0 +1,262 @@
+package ppe3.eole.vue;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+import ppe3.eole.main.Chrono;
+import ppe3.eole.modele.bdd.RequetesBdd;
+import ppe3.eole.modele.metier.Regate;
+import ppe3.eole.vue.jtable.DtmJTableRegCourseParticipants;
+
+public class RegateManagementPanel extends JPanel implements ActionListener {
+
+	/**
+	 * 
+	 */
+
+	private static final long serialVersionUID = 1L;
+	private static final String ABANDON = "abandon";
+	private Chrono chrono;
+	private JTable jtRace;
+	private JScrollPane panJtRace;
+	private Regate regate;
+	private JButton btnDepart, btnStop, btnRemiseAZero, btnArrivee, btnAbandon, btnFinCourse;
+	private JLabel lblChrono, lblTitreRegate;
+	@SuppressWarnings("unused")
+	private JOptionPane jopt1, jopt2;
+	private int ligneSelectTable = 0;
+	private ParticipantManagementPanel partPan;
+	private PanneauAvecFond panImg;
+
+	public RegateManagementPanel(ParticipantManagementPanel p) {
+		this.setBackground(Color.LIGHT_GRAY);
+		partPan = p;
+		jopt1 = new JOptionPane();
+		String nomRegate = JOptionPane.showInputDialog(null,
+				"Veuillez saisir le nom de la régate, s'il vous plait (pas d'appostrophe !", "Paramètres régate",
+				JOptionPane.QUESTION_MESSAGE);
+
+		jopt2 = new JOptionPane();
+		String distRegate = JOptionPane.showInputDialog(null, "Distance en miles, s'il vous plaît !",
+				"Paramètres régate", JOptionPane.QUESTION_MESSAGE);
+
+		regate = new Regate(nomRegate, Double.parseDouble(distRegate), partPan.getDate());
+		partPan.setRegate(regate);
+		chrono = new Chrono(this);
+		setLayout(null);
+		jtRace = new JTable();
+		panJtRace = new JScrollPane();
+		btnDepart = new JButton("Départ !");
+		btnStop = new JButton("Stop chrono !");
+		btnRemiseAZero = new JButton("Réinitialiser");
+		btnArrivee = new JButton("Arrivée");
+		btnAbandon = new JButton("Abandon ");
+		btnFinCourse = new JButton("Fin de la course");
+
+		lblChrono = new JLabel("00:00:00.00");
+		lblTitreRegate = new JLabel("Epreuve régate : " + regate.getLibelleRegate() + "         Distance : "
+				+ regate.getDistMiles() + " miles");
+		this.add(panJtRace);
+		this.add(lblTitreRegate);
+		
+		try {
+			panImg = new PanneauAvecFond(ImageIO.read(new File("img/2.jpg")));
+			panImg.setBounds(0,0,1000,550);
+			this.add(panImg);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		panJtRace.add(jtRace);
+		panJtRace.setViewportView(jtRace);
+		panJtRace.setBounds(10, 130, 600, 343);
+		btnDepart.setBounds(650, 150, 150, 30);
+		btnStop.setBounds(810, 150, 150, 30);
+		btnRemiseAZero.setBounds(650, 270, 180, 30);
+		btnArrivee.setBounds(650, 210, 200, 30);
+		btnAbandon.setBounds(860, 210, 100, 30);
+		btnFinCourse.setBounds(650, 330, 180, 30);
+
+		lblChrono.setBounds(650, 100, 150, 30);
+		lblTitreRegate.setBounds(150, 80, 450, 30);
+
+		btnStop.setEnabled(false);
+		btnRemiseAZero.setEnabled(false);
+		btnArrivee.setEnabled(false);
+		btnAbandon.setEnabled(false);
+		btnFinCourse.setEnabled(false);
+
+		panImg.add(btnDepart);
+		panImg.add(btnStop);
+		panImg.add(btnRemiseAZero);
+		panImg.add(btnArrivee);
+		panImg.add(btnAbandon);
+		panImg.add(btnFinCourse);
+		panImg.add(lblChrono);
+		panImg.add(lblTitreRegate);
+
+		btnDepart.addActionListener(this);
+		btnStop.addActionListener(this);
+		btnRemiseAZero.addActionListener(this);
+		btnArrivee.addActionListener(this);
+		btnAbandon.addActionListener(this);
+		btnFinCourse.addActionListener(this);
+
+		jtRace.setModel(new DtmJTableRegCourseParticipants());
+		RenduJTable.centrerCelluleJTable(jtRace);
+		jtRace.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				String nomVoilier = (String) jtRace.getModel().getValueAt(jtRace.getSelectedRow(), 3);
+				btnArrivee.setText("Arrivée : " + nomVoilier);
+				btnAbandon.setText("Abandon");
+				btnArrivee.setEnabled(true);
+				btnAbandon.setEnabled(true);
+				ligneSelectTable = jtRace.getSelectedRow();
+
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+			}
+		});
+
+		jtRace.getColumnModel().getColumn(0).setPreferredWidth(130);
+		jtRace.getColumnModel().getColumn(1).setPreferredWidth(20);
+		jtRace.getColumnModel().getColumn(2).setPreferredWidth(20);
+		jtRace.getColumnModel().getColumn(3).setPreferredWidth(200);
+		jtRace.getColumnModel().getColumn(4).setPreferredWidth(90);
+	}
+
+	////// GETTERS et SETTERS
+	public JTable getJtRace() {
+		return jtRace;
+	}
+
+	public void setJtRace(JTable jtRace) {
+		this.jtRace = jtRace;
+	}
+
+	public JLabel getLblChrono() {
+		return lblChrono;
+	}
+
+	public static String getAbandon() {
+		return ABANDON;
+	}
+	
+	
+
+	int cptBtnFinDeCourse = 0;
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if (e.getSource() == btnDepart) {
+			btnDepart.setEnabled(false);
+			btnFinCourse.setEnabled(true);
+			btnStop.setEnabled(true);
+			btnRemiseAZero.setEnabled(false);
+			btnFinCourse.setVisible(true);
+			btnDepart.setText("Reprendre");
+			chrono.getTimer().start();
+
+		}
+		if (e.getSource() == btnStop) {
+			chrono.getTimer().stop();
+			btnStop.setEnabled(false);
+			btnDepart.setEnabled(true);
+			btnRemiseAZero.setEnabled(true);
+		}
+		if (e.getSource() == btnRemiseAZero) {
+			chrono = null;
+			chrono = new Chrono(this);
+			btnStop.setEnabled(false);
+			btnDepart.setEnabled(true);
+			btnArrivee.setEnabled(false);
+			btnRemiseAZero.setEnabled(false);
+			lblChrono.setText("00:00:00:00");
+			for (int i = 0; i < jtRace.getRowCount(); i++) {
+				jtRace.setValueAt("", i, 4);
+			}
+			btnDepart.setText("Départ !");
+			btnFinCourse.setText("Fin de la course");
+			cptBtnFinDeCourse = 0;
+		}
+		if (e.getSource() == btnArrivee) {
+			btnArrivee.setEnabled(false);
+			btnAbandon.setEnabled(false);
+			jtRace.setValueAt(chrono.getTempsInterString(), ligneSelectTable, 4);
+		}
+		if (e.getSource() == btnAbandon) {
+			btnArrivee.setEnabled(false);
+			btnAbandon.setEnabled(false);
+			jtRace.setValueAt(ABANDON, ligneSelectTable, 4);
+		}
+
+		if (e.getSource() == btnFinCourse) {
+			cptBtnFinDeCourse++;
+			if (cptBtnFinDeCourse % 2 == 1) {
+				btnRemiseAZero.setEnabled(true);
+				chrono.getTimer().stop();
+				for (int i = 0; i < jtRace.getRowCount(); i++) {
+					if (jtRace.getValueAt(i, 4) == "")
+						jtRace.setValueAt(ABANDON, i, 4);
+				}
+				btnFinCourse.setText("Enregistrer");
+			}
+			if (cptBtnFinDeCourse % 2 == 0) {
+				Time temps = null;
+				RequetesBdd.enregistrerRegate(regate);
+				for (int i = 0; i < jtRace.getRowCount(); i++) {
+					String tempsString = (String) jtRace.getModel().getValueAt(i, 4);
+					tempsString = tempsString.equals(ABANDON) ? "23:59:59" : tempsString;
+					SimpleDateFormat sdf = new SimpleDateFormat("k:m:s");
+					long ms;
+					try {
+						ms = sdf.parse(tempsString).getTime();
+						temps = new Time(ms);
+					} catch (ParseException e1) {
+						e1.printStackTrace();
+					}
+					System.out.println(temps);
+					String nomVoilier = (String) jtRace.getModel().getValueAt(i, 3);
+					RequetesBdd.enregistrerStats(nomVoilier, regate.getLibelleRegate(), temps);
+				}
+
+				btnFinCourse.setVisible(false);
+				btnRemiseAZero.setEnabled(true);
+			}
+		}
+	}
+
+}

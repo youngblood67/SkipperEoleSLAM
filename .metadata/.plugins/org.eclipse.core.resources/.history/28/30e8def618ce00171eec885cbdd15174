@@ -1,0 +1,3 @@
+create table if not exists PARTICIPANT(id_participant int not null AUTO_INCREMENT,nom_voilier varchar(1024) not null,classe_voilier int not null,rating_voilier int not null,nom_skipper varchar(1024) not null, primary key(id_participant));
+create table if not exists REGATE(id_regate int not null AUTO_INCREMENT,libelle_regate varchar(1024) not null UNIQUE,dist_miles float not null, date_regate date not null, primary key (id_regate));
+create table if not exists STATISTIQUES(id_participant int not null, id_regate int not null,temps TIME not null, FOREIGN KEY(id_participant) REFERENCES PARTICIPANT(id_participant), FOREIGN KEY(id_regate) REFERENCES REGATE(id_regate), PRIMARY KEY(id_participant, id_regate));

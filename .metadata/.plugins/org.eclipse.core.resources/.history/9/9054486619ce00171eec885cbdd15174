@@ -1,0 +1,173 @@
+package ppe3.eole.modele.bdd;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
+
+/**
+ * <p>
+ * BaseDeDonnees est une classe regroupant les principales opérations relatives
+ * à une base de données MySQL (pour l'instant) ex : Connexion, test, sélection,
+ * modif... suppression.
+ * </p>
+ * <p>
+ * Elle permet notamment de cr�er une base de données ainsi que ses tables si
+ * celle-ci n'existe pas encore.
+ * </p>
+ * 
+ * <ul>
+ * Pour utiliser cette classe, il faut :
+ * <li>- installer la librairie mysql_connector[...].jar</li>
+ * <li>- modifier ou créer un fichier req_tables.sql qui doit être situé dans le
+ * dossier src et qui contiendra les requetes CREATE TABLE pour la création des
+ * tables</li>
+ * </ul>
+ * <strong>Fonctionne uniquement avec MySQL pour le moment à cause</strong>
+ * 
+ * @author Phil
+ *
+ * @version 1.0
+ */
+
+public class BaseDeDonnees {
+
+	/**
+	 * l'adresse où se situe la base de données
+	 */
+	public String url;
+
+	/**
+	 * Le nom de la base de données existante ou à créer.
+	 */
+	protected String nomBdd;
+
+	/**
+	 * La connexion à la base de données, lien établi entre l'apllication et la
+	 * bdd pour échanger les données.
+	 */
+	protected static Connection con;
+
+	/**
+	 * Objet de la connexion nécessaire pour émettre les requêtes sql
+	 */
+	protected static Statement st;
+
+	/**
+	 * Constructeur BaseDeDonnees.
+	 * 
+	 * A la construction l'adresse de la base de données est fixée à sa valeur
+	 * par défaut en localhost (modifiable uniquement dans le code source pour
+	 * l'instant).
+	 * 
+	 * @param nomBdd
+	 *            Nom de la base de données existante ou à créer
+	 *
+	 */
+
+	public BaseDeDonnees(String nomBdd) {
+		this.nomBdd = nomBdd;
+		url = "jdbc:mysql://localhost/" + this.nomBdd;
+		tInitBdd();
+
+	}
+
+	/**
+	 * La méthode tInitBdd (Test Initialisation de la Base de données) a pour
+	 * but de tester si la base de données
+	 * 
+	 * 
+	 * @return true si la base de données est op�rationnelle
+	 * 
+	 * @throws ClassNotFoundException
+	 *             en cas de problème de chargement des drivers de la bdd.
+	 * 
+	 * @throws SQLException
+	 *             si les paramêtres de la base de données sont erronés.
+	 * 
+	 * @throws FileNotFoundException
+	 *             si le fichier des requêtes n'est pas trouvé.
+	 */
+	private boolean tInitBdd() {
+		boolean valide = false;
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			con = DriverManager.getConnection(url, "root", "");
+			valide = true;
+			System.out.println("Connexion BDD ok");
+		} catch (ClassNotFoundException | SQLException sqle) {
+			System.out.println("Création de la base de données " + this.nomBdd);
+			url = "jdbc:mysql://localhost/mysql";
+			try {
+				con = DriverManager.getConnection(url, "root", "");
+				st = con.createStatement();
+				st.executeUpdate("CREATE DATABASE " + this.nomBdd);
+				System.out.println("BDD créée ok");
+			} catch (SQLException e) {
+				System.out.println("Erreur lors de la création de la BDD");
+				e.printStackTrace();
+			} finally {
+				try {
+					st.close();
+					con.close();
+				} catch (SQLException sqle1) {
+					sqle1.printStackTrace();
+				}
+			}
+
+			try {
+				// Reconnexion à la nouvelle base de données pour créer les
+				// tables
+				url = "jdbc:mysql://localhost/" + this.nomBdd;
+				con = DriverManager.getConnection(url, "root", "");
+				System.out.println("Connexion à la nouvelle base ok!");
+				System.out.println("Création des tables");
+				st = con.createStatement();
+				String req_tables = null;
+				File fichierSql = new File("src/req_tables.sql");
+				@SuppressWarnings("resource")
+				Scanner in = new Scanner(fichierSql);
+				while (in.hasNextLine()) {
+					req_tables = in.nextLine();
+					st.executeUpdate(req_tables);
+				}
+				valide = true;
+				System.out.println("Nouvelles tables créées ok");
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					st.close();
+					con.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return valide;
+	}
+
+	public void connexionBdd() {
+
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			con = DriverManager.getConnection(url, "root", "");
+		} catch (SQLException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void deconnexionBdd() {
+		try {
+			st.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+}
