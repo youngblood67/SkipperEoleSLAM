@@ -1,0 +1,6 @@
+Bonjour, il s'agit d'un projet en Java qui consiste à gérer des courses de voiliers.
+Pour faire fonctionner le logiciel il faut impérativement avoir Mysql d'installer par défaut.
+Le reste se fait automatiquement : création de la Bdd, des tables...
+
+philippeschaeffer67@gmail.com
+
