@@ -1,0 +1,302 @@
+package ppe3.eole.vue;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+
+import ppe3.eole.modele.bdd.RequetesBdd;
+import ppe3.eole.modele.metier.Participant;
+import ppe3.eole.modele.metier.Regate;
+import ppe3.eole.modele.metier.Skipper;
+import ppe3.eole.modele.metier.Voilier;
+import ppe3.eole.vue.jtable.DtmJTableListeParticipants;
+
+public class ParticipantManagementPanel extends JPanel implements ActionListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private JTextField txtNomVoilier, txtRating, txtNomSkipper;
+	private JLabel lblNomVoilier, lblClasseVoilier, lblRating, lblNomSkipper, lblDateRegate, lblTitreParticipants;
+	private JButton btnAjouter, btnEffacer, btnEffacerTout, btnModifier, btnTest;
+	private JComboBox<String> jComboClasseVoilier;
+	private JScrollPane panelJtSkipper;
+	private PanneauAvecFond panImg;
+
+	private JTable jtParticipant;
+	private Skipper skipper;
+	private Voilier voilier;
+	private Regate regate;
+	private Participant participant;
+	private static Date date;
+
+	public ParticipantManagementPanel() {
+		this.setBackground(Color.LIGHT_GRAY);
+		panelJtSkipper = new JScrollPane();
+		panelJtSkipper.setBackground(Color.WHITE);
+		panelJtSkipper.setBounds(380, 100, 590, 380);
+
+		txtNomVoilier = new JTextField();
+		txtRating = new JTextField();
+		txtNomSkipper = new JTextField();
+
+		jComboClasseVoilier = new JComboBox<>();
+		jComboClasseVoilier.addItem("-");
+		jComboClasseVoilier.addItem("1");
+		jComboClasseVoilier.addItem("2");
+		jComboClasseVoilier.addItem("3");
+		jComboClasseVoilier.addItem("4");
+
+		lblNomVoilier = new JLabel("Nom du voilier : ");
+		lblClasseVoilier = new JLabel("Classe du voilier : ");
+		lblRating = new JLabel("Rating : ");
+		lblNomSkipper = new JLabel("Nom du skipper : ");
+		lblTitreParticipants = new JLabel("LISTE DES PARTICIPANTS A LA REGATE");
+
+		date = new Date();
+		String[] joursEnFr = new String[] { "", "Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi",
+				"Samedi" };
+		String[] moisEnFr = new String[] { "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+				"septembre", "octobre", "novembre", "décenbre" };
+		DateFormatSymbols dfsFrancais = new DateFormatSymbols();
+		dfsFrancais.setWeekdays(joursEnFr);
+		dfsFrancais.setMonths(moisEnFr);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEEE dd MMMM yyyy", dfsFrancais);
+		lblDateRegate = new JLabel("Date du jour :                   " + sdf.format(date));
+
+		try {
+			panImg = new PanneauAvecFond(ImageIO.read(new File("img/2.jpg")));
+			panImg.setBounds(0,0,1000,550);
+			this.add(panImg);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		btnAjouter = new JButton("Nouvelle inscription");
+		btnEffacer = new JButton("Supprimer");
+		btnEffacerTout = new JButton("Supprimer tout");
+		btnModifier = new JButton("Modifier");
+		btnTest = new JButton("Ajout fictif");
+		lblDateRegate.setBounds(10, 70, 300, 20);
+		lblNomVoilier.setBounds(10, 130, 200, 20);
+		lblClasseVoilier.setBounds(10, 160, 200, 20);
+		lblRating.setBounds(10, 190, 200, 20);
+		lblNomSkipper.setBounds(10, 220, 200, 20);
+		lblTitreParticipants.setBounds(10, 70, 500, 20);
+
+		txtNomVoilier.setBounds(125, 130, 200, 20);
+		jComboClasseVoilier.setBounds(125, 160, 200, 20);
+		txtRating.setBounds(125, 190, 200, 20);
+		txtNomSkipper.setBounds(125, 220, 200, 20);
+
+		btnAjouter.setBounds(125, 260, 200, 20);
+		btnEffacer.setBounds(125, 320, 200, 20);
+		btnEffacerTout.setBounds(125, 350, 200, 20);
+		btnModifier.setBounds(125, 290, 200, 20);
+		btnTest.setBounds(125, 400, 200, 20);
+		panImg.add(txtNomVoilier);
+		panImg.add(jComboClasseVoilier);
+		panImg.add(txtRating);
+		panImg.add(txtNomSkipper);
+
+		panImg.add(lblNomVoilier);
+		panImg.add(lblClasseVoilier);
+		panImg.add(lblRating);
+		panImg.add(lblNomSkipper);
+		panImg.add(lblDateRegate);
+
+		panImg.add(btnAjouter);
+		panImg.add(btnEffacer);
+		panImg.add(btnEffacerTout);
+		panImg.add(btnModifier);
+		panImg.add(btnTest);
+
+		
+
+		jtParticipant = new JTable();
+		panelJtSkipper.add(jtParticipant);
+		panelJtSkipper.setViewportView(jtParticipant);
+
+		jtParticipant.addMouseListener(new MouseListener() {
+
+			@Override
+			public void mouseReleased(java.awt.event.MouseEvent e) {
+			}
+
+			@Override
+			public void mousePressed(java.awt.event.MouseEvent e) {
+
+				String nomVoilier = (String) jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 1);
+				setTxtNomVoilier(nomVoilier);
+				String classeVoilier = String
+						.valueOf(jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 2));
+				setjComboClasseVoilier(classeVoilier);
+				String rating = String.valueOf(jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 3));
+				setTxtRating(rating);
+				String nomSkipper = (String) jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 4);
+				setTxtNomSkipper(nomSkipper);
+
+			}
+
+			@Override
+			public void mouseExited(java.awt.event.MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(java.awt.event.MouseEvent e) {
+			}
+
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+			}
+		});
+
+		panImg.add(panelJtSkipper);
+
+		btnAjouter.addActionListener(this);
+		btnEffacer.addActionListener(this);
+		btnEffacerTout.addActionListener(this);
+		btnModifier.addActionListener(this);
+		btnTest.addActionListener(this);
+		jtParticipant.setModel(new DtmJTableListeParticipants());
+
+		configJTable();
+
+	}
+
+	private void configJTable() {
+		jtParticipant.getColumnModel().getColumn(0).setPreferredWidth(10);
+		jtParticipant.getColumnModel().getColumn(1).setPreferredWidth(140);
+		jtParticipant.getColumnModel().getColumn(2).setPreferredWidth(30);
+		jtParticipant.getColumnModel().getColumn(3).setPreferredWidth(30);
+		jtParticipant.getColumnModel().getColumn(4).setPreferredWidth(140);
+
+		RenduJTable.centrerCelluleJTable(jtParticipant);
+	}
+
+	public void setTxtNomVoilier(String shipName) {
+		txtNomVoilier.setText(shipName);
+	}
+
+	public void setjComboClasseVoilier(String classeVoilier) {
+		jComboClasseVoilier.setSelectedItem(classeVoilier);
+	}
+
+	public void setTxtRating(String rating) {
+		txtRating.setText(rating);
+	}
+
+	public void setTxtNomSkipper(String nomSkipper) {
+		txtNomSkipper.setText(nomSkipper);
+	}
+
+	public void setRegate(Regate regate) {
+		this.regate = regate;
+	}
+
+	public String getNomVoilier() {
+		///
+		return txtNomVoilier.getText();
+	}
+
+	public String getNomSkipper() {
+		return txtNomSkipper.getText();
+	}
+
+	public int getRating() {
+		return Integer.parseInt(txtRating.getText());
+	}
+
+	public int getClasseVoilier() {
+		return Integer.parseInt(jComboClasseVoilier.getSelectedItem().toString());
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public Regate getRegate() {
+		return regate;
+	}
+
+	public JTable getJtParticipant() {
+		return jtParticipant;
+	}
+
+	private void reinit() {
+		setTxtNomVoilier("");
+		setTxtRating("");
+		jComboClasseVoilier.setSelectedIndex(0);
+		setTxtNomSkipper("");
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if (e.getSource() == btnAjouter) {
+
+			try {
+				skipper = new Skipper(getNomSkipper());
+				int rating = getRating();
+				voilier = new Voilier(getNomVoilier(), getClasseVoilier(), rating);
+				participant = new Participant(skipper, voilier);
+				RequetesBdd.ajouterParticipant(participant);
+				jtParticipant.setModel(new DtmJTableListeParticipants());
+				reinit();
+			} catch (Exception ex) {
+				String msg = "- tous les champs doivent être remplis\n- le rating doir être un entier svp!";
+				JOptionPane.showMessageDialog(this, msg, "Champs incorrect(s)", JOptionPane.WARNING_MESSAGE);
+				System.err.println(msg);
+			}
+
+		}
+		if (e.getSource() == btnEffacer) {
+			int id = (int) jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 0);
+			RequetesBdd.effacerParticipant(id);
+			jtParticipant.setModel(new DtmJTableListeParticipants());
+			reinit();
+		}
+		if (e.getSource() == btnEffacerTout) {
+			RequetesBdd.effacerTousLesParticipant();
+			jtParticipant.setModel(new DtmJTableListeParticipants());
+			reinit();
+		}
+		if (e.getSource() == btnModifier) {
+			Integer id = (int) jtParticipant.getModel().getValueAt(jtParticipant.getSelectedRow(), 0);
+			if (jtParticipant.getSelectedRow() == -1)
+				System.out.println("Aucune selection...");
+			else
+				RequetesBdd.modifierParticipant(id, getNomVoilier(), getClasseVoilier(), getRating(), getNomSkipper());
+
+			jtParticipant.setModel(new DtmJTableListeParticipants());
+		}
+		
+		if (e.getSource() == btnTest) {
+			
+			RequetesBdd.ajouterParticipantsFictifs(18);
+			jtParticipant.setModel(new DtmJTableListeParticipants());
+			reinit();
+			
+		}
+		configJTable();
+	}
+
+}

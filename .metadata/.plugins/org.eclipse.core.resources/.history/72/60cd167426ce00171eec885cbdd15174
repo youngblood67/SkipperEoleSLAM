@@ -1,0 +1,107 @@
+package ppe3.eole.vue;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+public class FenetrePrincipale extends JFrame implements ActionListener {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JPanel panControle, panShow;
+	private JButton btnParticipantMgt, btnRegateMgt;
+	private JButton btnStatsMgt;
+	private ParticipantManagementPanel panParticipantMgt;
+	public RegateManagementPanel panRaceMgt;
+	private StatsManagementPanel panStatsMgt;
+	private PanneauAvecFond panImg;
+
+	public FenetrePrincipale() {
+
+		this.setSize(new Dimension(1000, 600));
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setResizable(false);
+
+		panControle = new JPanel(null);
+		btnParticipantMgt = new JButton("Gestion inscription");
+		btnRegateMgt = new JButton("Gestion régate - course");
+		btnStatsMgt = new JButton("Statistiques");
+
+		this.getContentPane().add(panControle);
+		panControle.setBounds(0, 0, 1000, 50);
+		panControle.add(btnParticipantMgt);
+		panControle.add(btnRegateMgt);
+		panControle.add(btnStatsMgt);
+
+		btnParticipantMgt.setBounds(0, 0, 333, 50);
+		btnRegateMgt.setBounds(333, 0, 333, 50);
+		btnStatsMgt.setBounds(666, 0, 333, 50);
+
+		panShow = new JPanel(null);
+
+		panControle.setBackground(Color.LIGHT_GRAY);
+		panShow.setBackground(Color.LIGHT_GRAY);
+		this.getContentPane().add(panShow);
+		
+		
+
+		btnParticipantMgt.addActionListener(this);
+		btnRegateMgt.addActionListener(this);
+		btnStatsMgt.addActionListener(this);
+		
+		try {
+			panImg = new PanneauAvecFond(ImageIO.read(new File("img/4.jpg")));
+			panImg.setBounds(0,0,1000,600);
+			
+			panShow.add(panImg);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		this.setVisible(true);
+
+		btnRegateMgt.setEnabled(false);
+		btnStatsMgt.setEnabled(false);
+
+	}
+
+	public JButton getBtnStatsMgt() {
+		return btnStatsMgt;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == btnParticipantMgt) {
+			panImg.removeAll();
+			panParticipantMgt = new ParticipantManagementPanel();
+			
+			panImg.add(panParticipantMgt);
+			panParticipantMgt.setBounds(0, 50, 1000, 600);
+			btnRegateMgt.setEnabled(true);
+			btnStatsMgt.setEnabled(true);
+		}
+		if (e.getSource() == btnRegateMgt) {
+			panImg.removeAll();
+			panRaceMgt = new RegateManagementPanel(panParticipantMgt);
+			panImg.add(panRaceMgt);
+			panRaceMgt.setBounds(0, 50, 1000, 600);
+
+		}
+		if (e.getSource() == btnStatsMgt) {
+			panImg.removeAll();
+			panStatsMgt = new StatsManagementPanel();
+			panImg.add(panStatsMgt);
+			panStatsMgt.setBounds(0, 50, 1000, 600);
+		}
+	}
+}

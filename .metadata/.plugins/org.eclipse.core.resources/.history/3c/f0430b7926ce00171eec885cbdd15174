@@ -1,0 +1,18 @@
+package ppe3.eole.main;
+
+import ppe3.eole.modele.bdd.BaseDeDonnees;
+import ppe3.eole.vue.FenetrePrincipale;
+
+public class Program {
+
+	static int num = 1;
+
+	public static void main(String[] args) {
+
+		new FenetrePrincipale();
+
+		new BaseDeDonnees("bd_skipper");
+		
+	}
+
+}
