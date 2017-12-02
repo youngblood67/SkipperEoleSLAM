@@ -1,0 +1,93 @@
+package ppe3.eole.vue.jtable;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+
+import javax.swing.table.DefaultTableModel;
+
+import ppe3.eole.modele.bdd.RequetesBdd;
+import ppe3.eole.vue.RegateManagementPanel;
+
+public class DtmJTableStatsRegate extends DefaultTableModel {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	ResultSet rs;
+	int classement = 0;
+	int ligne = 0;
+
+	public DtmJTableStatsRegate(String regate){
+		ajouterColonne();
+		rs= RequetesBdd.afficherStatsGeneral(regate);
+		creerJTable(rs);
+	}
+	
+	public DtmJTableStatsRegate(String regate, String cl) {
+		ajouterColonne();
+		rs = RequetesBdd.afficherStats(regate , cl);
+		creerJTable(rs);
+	}
+
+	private void creerJTable(ResultSet rs){
+
+		try {
+			while (rs.next()) {
+				classement++;
+				String nomSkipper = (String) rs.getObject("NOM_SKIPPER");
+				String nomVoilier = (String) rs.getObject("NOM_VOILIER");
+				int classe = (int) rs.getObject("CLASSE_VOILIER");
+				int rating = (int) rs.getObject("RATING_VOILIER");
+				Time temps = (Time) rs.getObject("TEMPS");
+				float distance = (float) rs.getObject("DIST_MILES");
+				int tempsSecond = convertirTempsEnSeconde(temps);
+				String tempsCalcule = String.valueOf(tempsCalcule(tempsSecond, rating, distance));
+				if (Integer.parseInt(tempsCalcule) < 99999) {
+					
+					tempsCalcule = "0" + tempsCalcule;
+				}
+				if (tempsSecond == (23 * 3600 + 59 * 60 + 59)) {
+					tempsCalcule = RegateManagementPanel.getAbandon();
+				}
+
+				ligne++;
+				String classementString;
+				if (classement == 1) {
+					classementString = String.valueOf(classement) + "er";
+				} else {
+					classementString = String.valueOf(classement) + "ème";
+				}
+				Object[] tableau = { classementString, nomSkipper, nomVoilier, classe, rating, temps, tempsCalcule };
+				this.addRow(tableau);
+			}
+		} catch (NumberFormatException | SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void ajouterColonne(){
+		this.addColumn("Arrivée");
+		this.addColumn("Skipper");
+		this.addColumn("Voilier");
+		this.addColumn("Classe");
+		this.addColumn("Rating");
+		this.addColumn("Temps réel");
+		this.addColumn("Temps calculé");
+	}
+	
+	private static int tempsCalcule(int tempsSecond, int rating, float distance) {
+
+		return (int) (tempsSecond + (5143 / (Math.sqrt(rating) + 3.5)) * distance);
+	}
+
+	private static int convertirTempsEnSeconde(Time temps) {
+		String[] tempsDecString = temps.toString().split(":");
+		int tempsSec = Integer.parseInt(tempsDecString[0]) * 3600 + Integer.parseInt(tempsDecString[1]) * 60
+				+ Integer.parseInt(tempsDecString[2]);
+		return tempsSec;
+
+	}
+
+}

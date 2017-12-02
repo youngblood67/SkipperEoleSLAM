@@ -1,0 +1,241 @@
+package ppe3.eole.modele.bdd;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+
+import ppe3.eole.modele.metier.Participant;
+import ppe3.eole.modele.metier.Regate;
+
+public class RequetesBdd extends BaseDeDonnees {
+
+	public RequetesBdd() {
+		super("bd_skipper");
+	}
+
+	public static void ajouterParticipant(Participant participant) {
+
+		String req = "INSERT INTO PARTICIPANT (NOM_VOILIER,CLASSE_VOILIER,RATING_VOILIER,NOM_SKIPPER) VALUES ('"
+				+ participant.getVoilier().getNomVoilier() + "','" + participant.getVoilier().getClasse() + "','"
+				+ participant.getVoilier().getRating() + "','" + participant.getSkipper().getNomSkipper() + "')";
+		try {
+			st = con.createStatement();
+			st.executeUpdate(req);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void ajouterParticipantsFictifs(int nb) {
+
+		String[][] voilier = { { "KruzenShtern", "1", "250", "Paul Figuier" }, { "Mir", "2", "450", "Luis Juan" },
+				{ "Sagrès", "3", "1560", "Maude Rith" }, { "Cisne Branco", "4", "2470", "Bert Lans" },
+				{ "Shabab Oman II", "1", "98", "Didier Walter" }, { "Santa Maria", "2", "458", "Marco Polo" },
+				{ "Gulden Leeuw", "3", "1455", "Ruud Von Tuff" }, { "Royal Helena", "4", "3455", "Math Brody" },
+				{ "Morgenster", "1", "178", "Joel Bast" }, { "Blue Clipper", "2", "258", "Sophie Varan" },
+				{ "Etoile", "3", "890", "Pascal Willem" }, { "Shtandart", "4", "1254", "Jimmy Stock" },
+				{ "Jolie Brise", "1", "123", "Sandy Moog" }, { "Belem" }, { "Posseidon", "2", "369", "Kurt Roussell" },
+				{ "Camillette", "3", "920", "Marie Schaeffer" }, { "Petit Prince", "4", "3565", "Julien Renard" },
+				{ "Avenant", "1", "487", "Maddy Bonjour" }, { "Pachyderme", "2", "1248", "Hayley Fan" } };
+
+		for (int i = 0; i < nb; i++)
+
+		{
+			String req = "INSERT INTO PARTICIPANT (NOM_VOILIER,CLASSE_VOILIER,RATING_VOILIER,NOM_SKIPPER) VALUES ('"
+					+ voilier[i][0] + "','" + voilier[i][1] + "','" + voilier[i][2] + "','" + voilier[i][3] + "')";
+			try {
+				st = con.createStatement();
+				st.executeUpdate(req);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	public static ResultSet afficheTousLesParticipantsJt() {
+		ResultSet rs = null;
+		String sql = "SELECT * FROM PARTICIPANT";
+		try {
+			st = con.prepareStatement(sql);
+			rs = st.executeQuery(sql);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return rs;
+	}
+
+	public static void modifierParticipant(int id, String nomVoilier, int classeVoilier, int ratingVoilier,
+			String nomSkipper) {
+
+		String req = "UPDATE PARTICIPANT SET nom_voilier = \'" + nomVoilier + "\', classe_voilier = \'" + classeVoilier
+				+ "\', rating_voilier = \'" + ratingVoilier + "\', nom_skipper = '" + nomSkipper
+				+ "\' WHERE id_participant = " + id;
+		// System.out.println(req);
+		try {
+			st = con.createStatement();
+			st.executeUpdate(req);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void effacerParticipant(int id) {
+
+		String req = "DELETE FROM PARTICIPANT WHERE ID_PARTICIPANT =" + id;
+		// System.out.println(req);
+		try {
+			st = con.createStatement();
+			st.executeUpdate(req);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void effacerTousLesParticipant() {
+		String req = "TRUNCATE TABLE PARTICIPANT";
+		try {
+			st = con.createStatement();
+			st.executeUpdate(req);
+			System.out.println("Table participant remise à zéro !");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void enregistrerRegate(Regate regate) {
+		String req = "SELECT * FROM REGATE";
+		try {
+			st = con.prepareStatement(req);
+			ResultSet rs = st.executeQuery(req);
+			while (rs.next()) {
+				if (rs.getObject("libelle_regate") == regate.getLibelleRegate()) {
+					System.out.println("Attention libelle similaire");
+					regate.setLibelleRegate(regate.getLibelleRegate() + "1");
+				}
+			}
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+
+		String reqRegate = "INSERT INTO REGATE (LIBELLE_REGATE, DIST_MILES, DATE_REGATE) VALUES ('"
+				+ regate.getLibelleRegate() + "','" + regate.getDistMiles() + "',NOW())";
+
+		try {
+			st = con.createStatement();
+			st.executeUpdate(reqRegate);
+			System.out.println("Regate enregistrée !");
+		} catch (SQLException e) {
+			System.err.println("Le nom de la régate existe déjà, veuillez le distinguer, svp!");
+			e.printStackTrace();
+		}
+	}
+
+	public static void enregistrerStats(String nomVoilier, String libelleRegate, Time temps) {
+		int id_participant = 0, id_regate = 0;
+		String reqIdPart = "SELECT ID_PARTICIPANT FROM PARTICIPANT WHERE NOM_VOILIER = '" + nomVoilier + "'";
+		String reqIdRegate = "SELECT ID_REGATE FROM REGATE WHERE LIBELLE_REGATE = '" + libelleRegate + "'";
+		System.out.println(reqIdRegate);
+		try {
+			// System.out.println(reqIdPart);
+			st = con.prepareStatement(reqIdPart);
+			ResultSet rs1 = st.executeQuery(reqIdPart);
+			while (rs1.next()) {
+				id_participant = (int) rs1.getObject("ID_PARTICIPANT");
+
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			// System.out.println(reqIdRegate);
+			st = con.prepareStatement(reqIdRegate);
+			ResultSet rs2 = st.executeQuery(reqIdRegate);
+			while (rs2.next()) {
+				id_regate = (int) rs2.getObject("ID_REGATE");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		String reqEnregistrerTemps = "INSERT INTO STATISTIQUES (ID_PARTICIPANT, ID_REGATE, TEMPS) VALUES ('"
+				+ id_participant + "','" + id_regate + "','" + temps + "')";
+		try {
+			System.out.println(reqEnregistrerTemps);
+			st.executeUpdate(reqEnregistrerTemps);
+			System.out.println("Temps enregistré");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static ResultSet afficherLibelleRegate() {
+		ResultSet rs = null;
+		String req = "SELECT LIBELLE_REGATE FROM REGATE";
+		try {
+			st = con.prepareStatement(req);
+			rs = st.executeQuery(req);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return rs;
+	}
+
+	public static ResultSet afficherLibelleClasse() {
+		ResultSet rs = null;
+		String req = "SELECT DISTINCT CLASSE_VOILIER FROM PARTICIPANT";
+		try {
+			st = con.prepareStatement(req);
+			rs = st.executeQuery(req);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return rs;
+	}
+
+	public static ResultSet afficherStats(String regate, String classe) {
+
+		ResultSet rs = null;
+
+		String req0 = "SELECT participant.nom_skipper,participant.nom_voilier,participant.classe_voilier,participant.rating_voilier,statistiques.temps, regate.dist_miles from participant,statistiques,regate WHERE participant.id_participant = statistiques.id_participant AND statistiques.id_regate = regate.id_regate AND regate.libelle_regate ='"
+				+ regate + "' AND participant.classe_voilier = '" + classe + "'  ORDER BY statistiques.temps";
+
+		try {
+			st = con.prepareStatement(req0);
+			rs = st.executeQuery(req0);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return rs;
+	}
+
+	public static ResultSet afficherStatsGeneral(String regate) {
+
+		ResultSet rs = null;
+
+		String req0 = "SELECT participant.nom_skipper,participant.nom_voilier,participant.classe_voilier,participant.rating_voilier,statistiques.temps, regate.dist_miles from participant,statistiques,regate WHERE participant.id_participant = statistiques.id_participant AND statistiques.id_regate = regate.id_regate AND regate.libelle_regate ='"
+				+ regate + "'  ORDER BY statistiques.temps";
+
+		try {
+			st = con.prepareStatement(req0);
+			rs = st.executeQuery(req0);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return rs;
+	}
+
+}

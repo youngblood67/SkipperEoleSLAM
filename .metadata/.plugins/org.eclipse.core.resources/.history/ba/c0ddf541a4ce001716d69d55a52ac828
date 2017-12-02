@@ -1,0 +1,92 @@
+package ppe3.eole.main;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Time;
+
+import javax.swing.Timer;
+
+import ppe3.eole.vue.RegateManagementPanel;
+
+public class Chrono {
+	RegateManagementPanel rmp;
+	private int h = 10, min = 30, sec = 0, cs = 0; // Pour tester
+	// private int h = 0, min = 0, sec = 0, cs = 0;
+	private Timer timer;
+	private String tempsInterString = "";
+	private String tempsInterStringCS = "";
+	private Time tempsFormatTimeSql = null;
+
+	public Chrono(RegateManagementPanel r) {
+		rmp = r;
+		int delai = 1;
+		ActionListener tache;
+
+		tache = new ActionListener() {
+
+			public void actionPerformed(ActionEvent e1) {
+
+				cs++;
+				if (cs == 100) {
+					cs = 0;
+					sec++;
+				}
+
+				if (sec == 60) {
+					sec = 0;
+					min++;
+				}
+				if (min == 60) {
+					min = 0;
+					h++;
+				}
+				String ch_cs = "", ch_sec = "", ch_min = "", ch_h = "";
+				if (cs < 10)
+					ch_cs = "0";
+				else
+					ch_cs = "";
+
+				if (sec < 10)
+					ch_sec = "0";
+				else
+					ch_sec = "";
+				if (min < 10)
+					ch_min = "0";
+				else
+					ch_min = "";
+				if (h < 10)
+					ch_h = "0";
+				else
+					ch_h = "";
+
+				tempsInterString = ch_h + String.valueOf(h) + ":" + ch_min + String.valueOf(min) + ":" + ch_sec
+						+ String.valueOf(sec);
+
+				tempsInterStringCS = ch_h + String.valueOf(h) + ":" + ch_min + String.valueOf(min) + ":" + ch_sec
+						+ String.valueOf(sec) + "." + ch_cs + String.valueOf(cs);
+
+				tempsFormatTimeSql = new Time(cs);
+				rmp.getLblChrono().setText(tempsInterStringCS);
+			}
+		};
+		
+		timer = new Timer(delai, tache);
+
+	}
+
+	public Time getTempsFormatTimeSql() {
+		return tempsFormatTimeSql;
+	}
+
+	public Timer getTimer() {
+		return timer;
+	}
+
+	public String getTempsInterString() {
+		return tempsInterString;
+	}
+
+	public String getTempsInterStringCS() {
+		return tempsInterStringCS;
+	}
+}

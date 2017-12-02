@@ -1,0 +1,192 @@
+
+package ppe3.eole.vue;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
+import ppe3.eole.modele.bdd.RequetesBdd;
+import ppe3.eole.vue.jtable.DtmJTableStatsRegate;
+
+public class StatsManagementPanel extends JPanel {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTable jtStats;
+	private JScrollPane panJtStats;
+	private PanneauAvecFond panImg;
+	private String chRegate;
+	private String chClasse;
+	private JComboBox<String> jComboRegate;
+	private JComboBox<String> jComboClasse;
+	private JLabel lblRegate;
+	private JLabel lblClasse;
+	private JButton btnPDF;
+
+	public StatsManagementPanel() {
+		setLayout(null);
+
+		lblRegate = new JLabel("Statistique de la régate : ");
+		lblRegate.setBounds(160, 70, 150, 20);
+
+		jtStats = new JTable();
+		panJtStats = new JScrollPane();
+		setBackground(Color.LIGHT_GRAY);
+
+		try {
+			panImg = new PanneauAvecFond(ImageIO.read(new File("img/2.jpg")));
+			panImg.setBounds(0, 0, 1000, 550);
+			this.add(panImg);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		jComboRegate = new JComboBox<>();
+		jComboClasse = new JComboBox<>();
+
+		jComboRegate.addItemListener(new ItemListener() {
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					jComboClasse.setSelectedItem("Toutes les classes");
+					chRegate = (String) jComboRegate.getSelectedItem();
+					chargerTypeClassement("Toutes les classes");
+				}
+
+			}
+		});
+
+		jComboRegate.setBounds(300, 70, 160, 20);
+		chargerComboRegate(RequetesBdd.afficherLibelleRegate());
+
+		lblClasse = new JLabel("Classe :");
+		lblClasse.setBounds(520, 70, 100, 20);
+
+		jComboClasse.addItem("Toutes les classes");
+		jComboClasse.addItemListener(new ItemListener() {
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					chClasse = (String) jComboClasse.getSelectedItem();
+					chargerTypeClassement(chClasse);
+					configJTable();
+				}
+
+			}
+		});
+
+		jComboClasse.setBounds(570, 70, 160, 20);
+		chargerComboClasse(RequetesBdd.afficherLibelleClasse());
+
+		jComboRegate.setSelectedIndex(jComboRegate.getItemCount() - 1);
+
+		btnPDF = new JButton("pdf");
+		btnPDF.setBounds(840, 70, 60, 20);
+
+		btnPDF.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Path path = Paths.get("pdf", "stats.txt");
+				String texte = "Texte à inserer";
+				try {
+					Files.write(path, texte.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+							StandardOpenOption.APPEND);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+
+			}
+		});
+
+		panJtStats.setBounds(100, 130, 800, 343);
+		panJtStats.add(jtStats);
+		panJtStats.setViewportView(jtStats);
+		panImg.add(lblRegate);
+		panImg.add(lblClasse);
+		panImg.add(jComboClasse);
+		panImg.add(jComboRegate);
+		panImg.add(panJtStats);
+		panImg.add(btnPDF);
+
+		chargerTypeClassement("Toutes les classes");
+
+		jtStats.setAutoCreateRowSorter(true);
+
+	}
+
+	private void chargerTypeClassement(String chClasse) {
+
+		if (chClasse == "Toutes les classes") {
+			jtStats.setModel(new DtmJTableStatsRegate(chRegate));
+		} else {
+			jtStats.setModel(new DtmJTableStatsRegate(chRegate, chClasse));
+		}
+		configJTable();
+	}
+
+	private void chargerComboClasse(ResultSet resultSet) {
+
+		try {
+			while (resultSet.next()) {
+				jComboClasse.addItem(resultSet.getString("CLASSE_VOILIER"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void chargerComboRegate(ResultSet resultSet) {
+
+		try {
+			while (resultSet.next()) {
+				jComboRegate.addItem(resultSet.getString("LIBELLE_REGATE"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void configJTable() {
+
+		jtStats.getColumnModel().getColumn(0).setPreferredWidth(30);
+		jtStats.getColumnModel().getColumn(1).setPreferredWidth(140);
+		jtStats.getColumnModel().getColumn(2).setPreferredWidth(150);
+		jtStats.getColumnModel().getColumn(3).setPreferredWidth(60);
+		jtStats.getColumnModel().getColumn(4).setPreferredWidth(60);
+		jtStats.getColumnModel().getColumn(5).setPreferredWidth(80);
+		RenduJTable.centrerCelluleJTable(jtStats);
+	}
+
+	public JComboBox<String> getjComboRegate() {
+		return jComboRegate;
+	}
+
+	public JTable getJtStats() {
+		return jtStats;
+	}
+
+}
